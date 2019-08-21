@@ -15,6 +15,7 @@ class _SCFMainState extends State<SCFMain> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIOverlays([]);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
@@ -29,6 +30,7 @@ class _SCFMainState extends State<SCFMain> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+    SystemChrome.setEnabledSystemUIOverlays(SystemUiOverlay.values);
     super.dispose();
   }
 
@@ -53,10 +55,7 @@ class _SCFMainState extends State<SCFMain> {
                 ),
                 Expanded(
                   flex: 1,
-                  child: Container(
-                    color: Colors.green,
-                    child: Text('userBar'),
-                  ),
+                  child: userbar(),
                 ),
               ],
             ),
@@ -69,7 +68,7 @@ class _SCFMainState extends State<SCFMain> {
   Widget moneyBar() {
     return Container(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           moneyButton('1000'),
@@ -96,12 +95,7 @@ class _SCFMainState extends State<SCFMain> {
       child: ButtonTheme(
         minWidth: MediaQuery.of(context).size.width / 10,
         child: FlatButton(
-          // child: Text(value),
-          // child: Image.asset(
-          //   'assets/scf/$value.jpg',
-          //   width: 40.0,
-          //   // height: 32.0,
-          // ),
+          child: Text(''),
           onPressed: () {
             print('Bid $value VND');
           },
@@ -133,7 +127,7 @@ class _SCFMainState extends State<SCFMain> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               bidButton('Deer'),
               bidButton('Gourd'),
@@ -141,7 +135,7 @@ class _SCFMainState extends State<SCFMain> {
             ],
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               bidButton('Fish'),
               bidButton('Crab'),
@@ -175,8 +169,13 @@ class _SCFMainState extends State<SCFMain> {
             child: Column(
               children: <Widget>[
                 Container(
+                  padding: const EdgeInsets.only(left: 7.5),
                   alignment: Alignment.centerLeft,
                   child: Text('Last Round:'),
+                ),
+                Divider(
+                  color: Colors.transparent,
+                  height: 5.0,
                 ),
                 lastRound(),
               ],
@@ -222,11 +221,11 @@ class _SCFMainState extends State<SCFMain> {
         child: Icon(
           Icons.repeat,
           color: Colors.white,
-          size: 75.0,
+          size: 100.0,
         ),
         shape: CircleBorder(),
         elevation: 2.0,
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.all(25.0),
         fillColor: Colors.grey,
         onPressed: () {
           print('Spin');
@@ -235,5 +234,36 @@ class _SCFMainState extends State<SCFMain> {
     );
   }
 
-  Widget userbar() {}
+  Widget userbar() {
+    return Container(
+      alignment: Alignment.bottomLeft,
+      child: userButton('Huy Le'),
+    );
+  }
+
+  double userButtonRadius = 20.0;
+  double userButtonHeight = 30.0;
+  Widget userButton(String name) {
+    return ButtonTheme(
+      height: userButtonHeight,
+      child: RaisedButton(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(userButtonRadius),
+                topRight: Radius.circular(userButtonRadius))),
+        child: Text(
+          name,
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        onPressed: () {
+          print('Current user: $name');
+          setState(() {
+            userButtonHeight = 30.0;
+          });
+        },
+      ),
+    );
+  }
 }
