@@ -8,10 +8,15 @@ class SCFMain extends StatefulWidget {
 
 class _SCFMainState extends State<SCFMain> {
   double betButtonSize;
-  double historyImageSize = 64;
-  GlobalKey betBoardKey = GlobalKey();
+  double historyImageSize;
+  double screenWidth;
+  double screenHeight;
   List<String> history = ["Shrimp", "Crab", "Fish"];
+  String currentUserString = '';
+  String betAmountString = '';
 
+  double userButtonRadius = 20.0;
+  double userButtonHeight = 45.0;
   @override
   void initState() {
     super.initState();
@@ -34,8 +39,24 @@ class _SCFMainState extends State<SCFMain> {
     super.dispose();
   }
 
+  getScreenSize() async {
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
+  }
+
+  setCurrentUser(String user) {
+    currentUserString = user;
+  }
+
+  setBetAmount(double money) {
+    double amount = double.parse(betAmountString) + money;
+    betAmountString = amount.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
+    getScreenSize();
+    print('Screen Width: $screenWidth - Screen Height: $screenHeight');
     return Scaffold(
       body: SingleChildScrollView(
         child: Center(
@@ -123,8 +144,9 @@ class _SCFMainState extends State<SCFMain> {
   }
 
   Widget betBoard() {
+    double betBoardWidth = screenWidth * 2 / 3;
+    betButtonSize = betBoardWidth / 3.5;
     return Container(
-      key: betBoardKey,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
@@ -150,10 +172,6 @@ class _SCFMainState extends State<SCFMain> {
   }
 
   Widget betButton(String button) {
-    final RenderBox containerRenderBox =
-        betBoardKey.currentContext.findRenderObject();
-    final Size betBoardSize = containerRenderBox.size;
-    betButtonSize = betBoardSize.width / 3.5;
     return Container(
       width: betButtonSize,
       height: betButtonSize,
@@ -171,29 +189,35 @@ class _SCFMainState extends State<SCFMain> {
   }
 
   Widget actionBoard() {
+    double actionBoardWidth = screenWidth / 3;
+    historyImageSize = actionBoardWidth / 4;
     return Container(
       child: Column(
         children: <Widget>[
           Expanded(
             flex: 1,
-            child: Column(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.only(left: 7.5),
-                  alignment: Alignment.centerLeft,
-                  child: Text('Last Round:'),
-                ),
-                Divider(
-                  color: Colors.transparent,
-                  height: 5.0,
-                ),
-                lastRound(),
-              ],
-            ),
+            child: lastRound(),
           ),
           Expanded(
-            flex: 2,
-            child: playButton(),
+            flex: 3,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    children: <Widget>[
+                      currentUser(),
+                      betAmount(),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: playButton(),
+                ),
+              ],
+            ),
           )
         ],
       ),
@@ -202,7 +226,6 @@ class _SCFMainState extends State<SCFMain> {
 
   Widget lastRound() {
     return Container(
-      color: Colors.blueGrey.withOpacity(0.5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
@@ -210,6 +233,26 @@ class _SCFMainState extends State<SCFMain> {
           historyImage(history[1]),
           historyImage(history[2]),
         ],
+      ),
+    );
+  }
+
+  Widget currentUser() {
+    return Container(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        'Current User: $currentUserString',
+        style: TextStyle(fontSize: 25.0),
+      ),
+    );
+  }
+
+  Widget betAmount() {
+    return Container(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        'Bet: $betAmountString',
+        style: TextStyle(fontSize: 25.0),
       ),
     );
   }
@@ -246,14 +289,26 @@ class _SCFMainState extends State<SCFMain> {
   }
 
   Widget userbar() {
+    double userBoardHeight = screenHeight / 7;
+    activeHeight = userBoardHeight * 3 / 4;
+    inactiveHeight = userBoardHeight / 2;
+    userBoardHeight = inactiveHeight;
     return Container(
+      color: Colors.tealAccent,
       alignment: Alignment.bottomLeft,
-      child: userButton('Huy Le'),
+      child: Row(
+        children: <Widget>[
+          userButton('Huy Le'),
+          userButton('ThanhNH'),
+          userButton('HanhBD'),
+          userButton('TuyetNTM'),
+        ],
+      ),
     );
   }
 
-  double userButtonRadius = 20.0;
-  double userButtonHeight = 30.0;
+  double activeHeight;
+  double inactiveHeight;
   Widget userButton(String name) {
     return ButtonTheme(
       height: userButtonHeight,
@@ -270,12 +325,8 @@ class _SCFMainState extends State<SCFMain> {
         ),
         onPressed: () {
           setState(() {
-            userButtonHeight = 30.0;
-
-            double width = MediaQuery.of(context).size.width;
-            double height = MediaQuery.of(context).size.height;
-            print('width: $width');
-            print('height: $height');
+            userButtonHeight = activeHeight;
+            setCurrentUser(name);
           });
         },
       ),
