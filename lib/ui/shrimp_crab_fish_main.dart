@@ -7,9 +7,9 @@ class SCFMain extends StatefulWidget {
 }
 
 class _SCFMainState extends State<SCFMain> {
-  double bidButtonWidth = 118;
-  double historyImageWidth = 64;
-  // Stirng[] history = String[3]{};
+  double betButtonSize;
+  double historyImageSize = 64;
+  GlobalKey betBoardKey = GlobalKey();
   List<String> history = ["Shrimp", "Crab", "Fish"];
 
   @override
@@ -86,16 +86,17 @@ class _SCFMainState extends State<SCFMain> {
   }
 
   Widget moneyButton(String value) {
-    print('Log: ${MediaQuery.of(context).size.width / 10}');
     return Container(
+      margin: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
         image: DecorationImage(
-            image: AssetImage('assets/scf/$value.jpg'), fit: BoxFit.fitWidth),
+            image: AssetImage('assets/scf/$value.jpg'), fit: BoxFit.contain),
       ),
       child: ButtonTheme(
         minWidth: MediaQuery.of(context).size.width / 10,
+        height: MediaQuery.of(context).size.height / 12,
         child: FlatButton(
-          child: Text(''),
+          child: null,
           onPressed: () {
             print('Bid $value VND');
           },
@@ -110,7 +111,7 @@ class _SCFMainState extends State<SCFMain> {
         children: <Widget>[
           Expanded(
             flex: 2,
-            child: bidBoard(),
+            child: betBoard(),
           ),
           Expanded(
             flex: 1,
@@ -121,25 +122,26 @@ class _SCFMainState extends State<SCFMain> {
     );
   }
 
-  Widget bidBoard() {
+  Widget betBoard() {
     return Container(
+      key: betBoardKey,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              bidButton('Deer'),
-              bidButton('Gourd'),
-              bidButton('Rooster'),
+              betButton('Deer'),
+              betButton('Gourd'),
+              betButton('Rooster'),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              bidButton('Fish'),
-              bidButton('Crab'),
-              bidButton('Shrimp'),
+              betButton('Fish'),
+              betButton('Crab'),
+              betButton('Shrimp'),
             ],
           ),
         ],
@@ -147,16 +149,24 @@ class _SCFMainState extends State<SCFMain> {
     );
   }
 
-  Widget bidButton(String button) {
-    return FlatButton(
-      child: Image.asset(
-        'assets/scf/$button.jpg',
-        width: bidButtonWidth,
-        fit: BoxFit.fitWidth,
+  Widget betButton(String button) {
+    final RenderBox containerRenderBox =
+        betBoardKey.currentContext.findRenderObject();
+    final Size betBoardSize = containerRenderBox.size;
+    betButtonSize = betBoardSize.width / 3.5;
+    return Container(
+      width: betButtonSize,
+      height: betButtonSize,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+            image: AssetImage('assets/scf/$button.jpg'), fit: BoxFit.fill),
       ),
-      onPressed: () {
-        print('Clicked $button');
-      },
+      child: FlatButton(
+        child: null,
+        onPressed: () {
+          print('Clicked $button');
+        },
+      ),
     );
   }
 
@@ -192,25 +202,26 @@ class _SCFMainState extends State<SCFMain> {
 
   Widget lastRound() {
     return Container(
+      color: Colors.blueGrey.withOpacity(0.5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
-          Image.asset(
-            'assets/scf/${history[0]}.jpg',
-            width: historyImageWidth,
-            fit: BoxFit.fitWidth,
-          ),
-          Image.asset(
-            'assets/scf/${history[1]}.jpg',
-            width: historyImageWidth,
-            fit: BoxFit.fitWidth,
-          ),
-          Image.asset(
-            'assets/scf/${history[2]}.jpg',
-            width: historyImageWidth,
-            fit: BoxFit.fitWidth,
-          ),
+          historyImage(history[0]),
+          historyImage(history[1]),
+          historyImage(history[2]),
         ],
+      ),
+    );
+  }
+
+  Widget historyImage(String image) {
+    return Container(
+      // margin: const EdgeInsets.all(5.0),
+      width: historyImageSize,
+      height: historyImageSize,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+            image: AssetImage('assets/scf/$image.jpg'), fit: BoxFit.fill),
       ),
     );
   }
@@ -258,9 +269,13 @@ class _SCFMainState extends State<SCFMain> {
           ),
         ),
         onPressed: () {
-          print('Current user: $name');
           setState(() {
             userButtonHeight = 30.0;
+
+            double width = MediaQuery.of(context).size.width;
+            double height = MediaQuery.of(context).size.height;
+            print('width: $width');
+            print('height: $height');
           });
         },
       ),
