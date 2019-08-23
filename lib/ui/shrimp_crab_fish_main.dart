@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:read_device_info/model/user.dart';
+import 'package:read_device_info/service/game_manager.dart';
 
 class SCFMain extends StatefulWidget {
   @override
@@ -17,6 +19,9 @@ class _SCFMainState extends State<SCFMain> {
 
   double userButtonRadius = 20.0;
   double userButtonHeight = 45.0;
+  // List<User> userList = new List<User>();
+  GameManager gameManager = new GameManager();
+
   @override
   void initState() {
     super.initState();
@@ -56,7 +61,6 @@ class _SCFMainState extends State<SCFMain> {
   @override
   Widget build(BuildContext context) {
     getScreenSize();
-    print('Screen Width: $screenWidth - Screen Height: $screenHeight');
     return Scaffold(
       body: SingleChildScrollView(
         child: Center(
@@ -240,9 +244,15 @@ class _SCFMainState extends State<SCFMain> {
   Widget currentUser() {
     return Container(
       alignment: Alignment.centerLeft,
-      child: Text(
-        'Current User: $currentUserString',
-        style: TextStyle(fontSize: 25.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.account_circle),
+          Text(
+            ': $currentUserString',
+            style: TextStyle(fontSize: 20.0),
+          ),
+        ],
       ),
     );
   }
@@ -250,9 +260,15 @@ class _SCFMainState extends State<SCFMain> {
   Widget betAmount() {
     return Container(
       alignment: Alignment.centerLeft,
-      child: Text(
-        'Bet: $betAmountString',
-        style: TextStyle(fontSize: 25.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.attach_money),
+          Text(
+            ': $betAmountString',
+            style: TextStyle(fontSize: 20.0),
+          ),
+        ],
       ),
     );
   }
@@ -275,11 +291,11 @@ class _SCFMainState extends State<SCFMain> {
         child: Icon(
           Icons.repeat,
           color: Colors.white,
-          size: 100.0,
+          size: 75.0,
         ),
         shape: CircleBorder(),
         elevation: 2.0,
-        padding: const EdgeInsets.all(25.0),
+        padding: const EdgeInsets.all(20.0),
         fillColor: Colors.grey,
         onPressed: () {
           print('Spin');
@@ -289,47 +305,83 @@ class _SCFMainState extends State<SCFMain> {
   }
 
   Widget userbar() {
-    double userBoardHeight = screenHeight / 7;
-    activeHeight = userBoardHeight * 3 / 4;
-    inactiveHeight = userBoardHeight / 2;
-    userBoardHeight = inactiveHeight;
     return Container(
-      color: Colors.tealAccent,
       alignment: Alignment.bottomLeft,
       child: Row(
         children: <Widget>[
-          userButton('Huy Le'),
-          userButton('ThanhNH'),
-          userButton('HanhBD'),
-          userButton('TuyetNTM'),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: gameManager.userList.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  width: screenWidth / 6,
+                  child: Card(
+                    color: gameManager.userList[index].name == currentUserString
+                        ? Colors.white
+                        : Colors.grey,
+                    child: FlatButton(
+                      child: Text(
+                        '${gameManager.userList[index].name}',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          currentUserString = gameManager.userList[index].name;
+                          gameManager.currentUser = gameManager.userList[index];
+                          print(gameManager.currentUser.name);
+                        });
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
+            child: RaisedButton(
+              child: Icon(Icons.add),
+              onPressed: () => addUserDialog(context),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  double activeHeight;
-  double inactiveHeight;
-  Widget userButton(String name) {
-    return ButtonTheme(
-      height: userButtonHeight,
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(userButtonRadius),
-                topRight: Radius.circular(userButtonRadius))),
-        child: Text(
-          name,
-          style: TextStyle(
-            color: Colors.white,
+  TextEditingController addUserTextFieldController = TextEditingController();
+  addUserDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (contxt) {
+        return AlertDialog(
+          title: Text('Add New Player'),
+          content: TextField(
+            controller: addUserTextFieldController,
+            decoration: InputDecoration(hintText: 'Enter name'),
           ),
-        ),
-        onPressed: () {
-          setState(() {
-            userButtonHeight = activeHeight;
-            setCurrentUser(name);
-          });
-        },
-      ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('Save'),
+              onPressed: () {
+                setState(() {
+                  gameManager.userList
+                      .add(User(addUserTextFieldController.text));
+                });
+                addUserTextFieldController.clear();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
