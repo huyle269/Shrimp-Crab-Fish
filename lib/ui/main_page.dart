@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:read_device_info/model/user.dart';
 import 'package:read_device_info/service/game_manager.dart';
+import 'package:read_device_info/ui/result_page.dart';
 
 class SCFMain extends StatefulWidget {
   @override
@@ -9,6 +10,7 @@ class SCFMain extends StatefulWidget {
 }
 
 class _SCFMainState extends State<SCFMain> {
+  GameManager gameManager = new GameManager();
   double betButtonSize;
   double historyImageSize;
   double screenWidth;
@@ -19,8 +21,7 @@ class _SCFMainState extends State<SCFMain> {
 
   double userButtonRadius = 20.0;
   double userButtonHeight = 45.0;
-  // List<User> userList = new List<User>();
-  GameManager gameManager = new GameManager();
+  TextEditingController addUserTextFieldController = TextEditingController();
 
   @override
   void initState() {
@@ -53,9 +54,10 @@ class _SCFMainState extends State<SCFMain> {
     currentUserString = user;
   }
 
-  setBetAmount(double money) {
-    double amount = double.parse(betAmountString) + money;
-    betAmountString = amount.toString();
+  setBetAmount(int money) {
+    setState(() {
+      betAmountString = '${money.toString()}đ';
+    });
   }
 
   @override
@@ -111,6 +113,7 @@ class _SCFMainState extends State<SCFMain> {
   }
 
   Widget moneyButton(String value) {
+    int money = int.parse(value);
     return Container(
       margin: const EdgeInsets.all(2.5),
       decoration: BoxDecoration(
@@ -123,7 +126,8 @@ class _SCFMainState extends State<SCFMain> {
         child: FlatButton(
           child: null,
           onPressed: () {
-            print('Bid $value VND');
+            gameManager.addBet(money);
+            setBetAmount(gameManager.currentUser.totalBet);
           },
         ),
       ),
@@ -157,17 +161,17 @@ class _SCFMainState extends State<SCFMain> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              betButton('Deer'),
-              betButton('Gourd'),
-              betButton('Rooster'),
+              betButton(Gates.Deer),
+              betButton(Gates.Gourd),
+              betButton(Gates.Rooster),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              betButton('Fish'),
-              betButton('Crab'),
-              betButton('Shrimp'),
+              betButton(Gates.Fish),
+              betButton(Gates.Crab),
+              betButton(Gates.Shrimp),
             ],
           ),
         ],
@@ -175,18 +179,28 @@ class _SCFMainState extends State<SCFMain> {
     );
   }
 
-  Widget betButton(String button) {
+  Widget betButton(Gates gate) {
+    String image = describeEnum(gate);
     return Container(
       width: betButtonSize,
       height: betButtonSize,
       decoration: BoxDecoration(
         image: DecorationImage(
-            image: AssetImage('assets/scf/$button.jpg'), fit: BoxFit.fill),
+            image: AssetImage('assets/scf/$image.jpg'), fit: BoxFit.fill),
       ),
       child: FlatButton(
         child: null,
         onPressed: () {
-          print('Clicked $button');
+          if (gameManager.currentUser != null) {
+            if (gameManager.currentGate == gate) {
+              return;
+            }
+            gameManager.currentGate = gate;
+            print(
+                '${gameManager.currentUser.name} choose: ${gameManager.currentGate}');
+          } else {
+            print('Select user');
+          }
         },
       ),
     );
@@ -229,16 +243,20 @@ class _SCFMainState extends State<SCFMain> {
   }
 
   Widget lastRound() {
-    return Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: <Widget>[
-          historyImage(history[0]),
-          historyImage(history[1]),
-          historyImage(history[2]),
-        ],
-      ),
-    );
+    if (gameManager.lastRound.length > 0) {
+      return Container(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            historyImage(gameManager.lastRound[0]),
+            historyImage(gameManager.lastRound[1]),
+            historyImage(gameManager.lastRound[2]),
+          ],
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 
   Widget currentUser() {
@@ -273,7 +291,8 @@ class _SCFMainState extends State<SCFMain> {
     );
   }
 
-  Widget historyImage(String image) {
+  Widget historyImage(Gates gate) {
+    String image = describeEnum(gate);
     return Container(
       // margin: const EdgeInsets.all(5.0),
       width: historyImageSize,
@@ -298,7 +317,25 @@ class _SCFMainState extends State<SCFMain> {
         padding: const EdgeInsets.all(20.0),
         fillColor: Colors.grey,
         onPressed: () {
-          print('Spin');
+          setState(() {
+            if (gameManager.userList.length > 0) {
+              //Check bet
+              //Animation
+              //Spin
+              //Show result and user revenue dialog
+              //Close dialog, update last round result and clear user bet
+              gameManager.spin();
+              String result0 = describeEnum(gameManager.lastRound[0]);
+              String result1 = describeEnum(gameManager.lastRound[1]);
+              String result2 = describeEnum(gameManager.lastRound[2]);
+              Navigator.of(context).push(PageRouteBuilder(
+                  opaque: false,
+                  pageBuilder: (BuildContext context, _, __) =>
+                      SCFResult(result0, result1, result2)));
+            } else {
+              print('Add Users');
+            }
+          });
         },
       ),
     );
@@ -306,7 +343,8 @@ class _SCFMainState extends State<SCFMain> {
 
   Widget userbar() {
     return Container(
-      alignment: Alignment.bottomLeft,
+      color: Colors.white.withOpacity(0.5),
+      alignment: Alignment.centerLeft,
       child: Row(
         children: <Widget>[
           Expanded(
@@ -329,7 +367,6 @@ class _SCFMainState extends State<SCFMain> {
                         setState(() {
                           currentUserString = gameManager.userList[index].name;
                           gameManager.currentUser = gameManager.userList[index];
-                          print(gameManager.currentUser.name);
                         });
                       },
                     ),
@@ -350,7 +387,6 @@ class _SCFMainState extends State<SCFMain> {
     );
   }
 
-  TextEditingController addUserTextFieldController = TextEditingController();
   addUserDialog(BuildContext context) async {
     return showDialog(
       context: context,
@@ -371,11 +407,12 @@ class _SCFMainState extends State<SCFMain> {
             FlatButton(
               child: Text('Save'),
               onPressed: () {
+                String userName = addUserTextFieldController.text;
                 setState(() {
-                  gameManager.userList
-                      .add(User(addUserTextFieldController.text));
+                  gameManager.addUser(userName);
                 });
                 addUserTextFieldController.clear();
+                SystemChrome.setEnabledSystemUIOverlays([]);
                 Navigator.of(context).pop();
               },
             ),
